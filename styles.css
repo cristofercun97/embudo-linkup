@@ -1120,6 +1120,88 @@
 
     .btn-cuponera:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.4); transform: translateY(-2px); }
 
+    /* ============================================================
+       CUPONERA SECTION
+    ============================================================ */
+    .cuponera-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .cuponera-inner h2 {
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      margin-bottom: 18px;
+    }
+
+    .cuponera-inner > p {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      max-width: 620px;
+      margin: 0 auto 48px;
+    }
+
+    .cuponera-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 48px;
+      text-align: left;
+    }
+
+    .cuponera-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 28px 28px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .cuponera-card:hover {
+      border-color: rgba(74,222,128,0.25);
+      background: rgba(74,222,128,0.04);
+    }
+
+    .cuponera-card-icon {
+      font-size: 2rem;
+      margin-bottom: 14px;
+      line-height: 1;
+    }
+
+    .cuponera-card h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--white);
+    }
+
+    .cuponera-card p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.65;
+    }
+
+    .cuponera-cta-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .cuponera-grid { grid-template-columns: 1fr; }
+      .cuponera-cta-block .btn-primary,
+      .cuponera-cta-block .btn-wa {
+        width: 100%;
+        max-width: 360px;
+        justify-content: center;
+      }
+    }
+
     .footer-copy {
       font-size: 0.76rem;
       color: rgba(255,255,255,0.25);

@@ -141,14 +141,14 @@
               class="data-row"
               @click="openDetail(row)"
             >
-              <td class="td-date">{{ formatDate(row.createdAt) }}</td>
-              <td>
+              <td class="td-date" data-label="Fecha">{{ formatDate(row.createdAt) }}</td>
+              <td data-label="Origen">
                 <span class="badge" :class="'badge-' + row.landingId">
                   {{ landingLabel(row.landingId) }}
                 </span>
               </td>
-              <td class="td-contact">{{ contactInfo(row) }}</td>
-              <td class="td-score">
+              <td class="td-contact" data-label="Contacto">{{ contactInfo(row) }}</td>
+              <td class="td-score" data-label="Puntuación">
                 <template v-if="row.score !== undefined">
                   <span class="score-pill" :class="scorePillClass(row)">
                     {{ row.score }}
@@ -157,7 +157,7 @@
                 </template>
                 <span v-else class="muted">—</span>
               </td>
-              <td>
+              <td data-label="Estado">
                 <span class="status-badge" :class="'status-' + (row.status || 'new')">
                   {{ statusLabel(row.status) }}
                 </span>
@@ -171,6 +171,39 @@
 
         <div v-if="filteredRows.length" class="table-footer">
           Mostrando {{ filteredRows.length }} de {{ activeTab === 'enc-afiliados' ? afiliadoCount : comercioCount }} registros
+        </div>
+      </section>
+
+      <!-- QUESTION STATS -->
+      <section
+        v-if="(activeTab === 'enc-afiliados' || activeTab === 'enc-comercios') && questionStats.length"
+        class="stats-section"
+      >
+        <div class="stats-header">
+          <h3 class="stats-title">📊 Ranking de preguntas por afinidad</h3>
+          <p class="stats-sub">Ordenado por promedio de respuesta (2 = máxima afinidad). Revela qué temas resuenan más con los encuestados.</p>
+        </div>
+        <div class="stats-list">
+          <div v-for="(q, i) in questionStats" :key="q.key" class="stat-row">
+            <div class="stat-rank" :class="i < 3 ? 'rank-top' : ''">{{ i + 1 }}</div>
+            <div class="stat-content">
+              <div class="stat-label">{{ q.label }}</div>
+              <div class="stat-bar-row">
+                <div class="stat-bar-bg">
+                  <div class="stat-bar-fill stat-fill-high" :style="{ width: q.pctHigh + '%' }"></div>
+                  <div class="stat-bar-fill stat-fill-mid"  :style="{ width: q.pctMid + '%' }"></div>
+                  <div class="stat-bar-fill stat-fill-low"  :style="{ width: q.pctLow + '%' }"></div>
+                </div>
+                <div class="stat-legend">
+                  <span class="stat-ct-high">{{ q.pctHigh }}% alto</span>
+                  <span class="stat-ct-mid">{{ q.pctMid }}% medio</span>
+                  <span class="stat-ct-low">{{ q.pctLow }}% bajo</span>
+                  <span class="stat-total">{{ q.total }} resp.</span>
+                </div>
+              </div>
+            </div>
+            <div class="stat-avg" :class="statAvgClass(q.avgNum)">{{ q.avg }}</div>
+          </div>
         </div>
       </section>
 
@@ -197,11 +230,11 @@
           </thead>
           <tbody>
             <tr v-for="lead in leadsAfiliados" :key="lead.id" class="data-row">
-              <td class="td-date">{{ formatDate(lead.createdAt) }}</td>
-              <td>{{ lead.nombre || '—' }}</td>
-              <td>{{ lead.edad ?? '—' }}</td>
-              <td>{{ lead.email || '—' }}</td>
-              <td>
+              <td class="td-date" data-label="Fecha">{{ formatDate(lead.createdAt) }}</td>
+              <td data-label="Nombre">{{ lead.nombre || '—' }}</td>
+              <td data-label="Edad">{{ lead.edad ?? '—' }}</td>
+              <td data-label="Email">{{ lead.email || '—' }}</td>
+              <td data-label="Teléfono">
                 <a v-if="lead.telefono"
                    :href="'https://wa.me/' + sanitizePhone(lead.telefono)"
                    target="_blank" rel="noopener" class="wa-link">
@@ -241,12 +274,12 @@
           </thead>
           <tbody>
             <tr v-for="lead in leadsComercio" :key="lead.id" class="data-row">
-              <td class="td-date">{{ formatDate(lead.createdAt) }}</td>
-              <td>{{ lead.nombre || '—' }}</td>
-              <td>{{ lead.nicho || '—' }}</td>
-              <td>{{ lead.nombreNegocio || '—' }}</td>
-              <td>{{ lead.email || '—' }}</td>
-              <td>
+              <td class="td-date" data-label="Fecha">{{ formatDate(lead.createdAt) }}</td>
+              <td data-label="Nombre">{{ lead.nombre || '—' }}</td>
+              <td data-label="Nicho">{{ lead.nicho || '—' }}</td>
+              <td data-label="Negocio">{{ lead.nombreNegocio || '—' }}</td>
+              <td data-label="Email">{{ lead.email || '—' }}</td>
+              <td data-label="Teléfono">
                 <a v-if="lead.telefono"
                    :href="'https://wa.me/' + sanitizePhone(lead.telefono)"
                    target="_blank" rel="noopener" class="wa-link">
@@ -395,6 +428,61 @@ const qualifiedCount  = computed(() => submissions.value.filter(s => s.isQualifi
 const leadsAfiliados = computed(() => leads.value.filter(l => l.landingId === 'afiliado'))
 const leadsComercio  = computed(() => leads.value.filter(l => l.landingId === 'comercio'))
 
+// Question labels for analytics
+const QUESTION_LABELS = {
+  afiliado: {
+    q1: 'Hábitos de consumo',
+    q2: 'Comportamiento de recomendación',
+    q3: 'Tu influencia real',
+    q4: 'Lo que más te importa',
+    q5: 'Mentalidad sobre ingresos',
+    q6: 'Relación con el comercio local',
+    q7: 'Recomendaciones con valor'
+  },
+  comercio: {
+    q1: 'Tipo de negocio',
+    q2: 'Volumen de clientes',
+    q3: 'Mayor desafío actual',
+    q4: 'Estrategia de captación',
+    q5: 'Urgencia de crecimiento',
+    q6: 'Interés en captar sin publicidad',
+    q7: 'Mentalidad hacia el modelo',
+    q8: 'Validación de monetización',
+    q9: 'Apertura digital',
+    q10: 'Disposición a formar parte'
+  }
+}
+
+const questionStats = computed(() => {
+  const landingId = activeTab.value === 'enc-afiliados' ? 'afiliado' : 'comercio'
+  const labels = QUESTION_LABELS[landingId]
+  const rows = filteredRows.value.filter(r => r.answers && typeof r.answers === 'object')
+  const stats = {}
+  for (const row of rows) {
+    for (const [qKey, val] of Object.entries(row.answers)) {
+      if (!labels[qKey]) continue
+      if (!stats[qKey]) stats[qKey] = { total: 0, sum: 0, counts: { 0: 0, 1: 0, 2: 0 } }
+      const v = Number(val)
+      stats[qKey].total++
+      stats[qKey].sum += v
+      stats[qKey].counts[v] = (stats[qKey].counts[v] || 0) + 1
+    }
+  }
+  return Object.entries(stats)
+    .filter(([k]) => labels[k])
+    .map(([key, s]) => ({
+      key,
+      label: labels[key],
+      total: s.total,
+      avg: s.total > 0 ? (s.sum / s.total).toFixed(2) : '0.00',
+      avgNum: s.total > 0 ? s.sum / s.total : 0,
+      pctHigh: s.total > 0 ? Math.round((s.counts[2] || 0) / s.total * 100) : 0,
+      pctMid:  s.total > 0 ? Math.round((s.counts[1] || 0) / s.total * 100) : 0,
+      pctLow:  s.total > 0 ? Math.round((s.counts[0] || 0) / s.total * 100) : 0,
+    }))
+    .sort((a, b) => b.avgNum - a.avgNum)
+})
+
 // Filtered rows
 const filteredRows = computed(() => {
   const q    = searchQuery.value.toLowerCase()
@@ -542,6 +630,12 @@ function scoreTag(row) {
 
 function sanitizePhone(phone) {
   return phone.replace(/\D/g, '')
+}
+
+function statAvgClass(avg) {
+  if (avg >= 1.5) return 'avg-high'
+  if (avg >= 0.8) return 'avg-mid'
+  return 'avg-low'
 }
 
 onMounted(() => {
@@ -726,7 +820,9 @@ onMounted(() => {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .loading-state,
@@ -744,6 +840,7 @@ onMounted(() => {
 
 .data-table {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -1043,8 +1140,13 @@ onMounted(() => {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 4px;
-  width: fit-content;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  width: 100%;
 }
+
+.tabs-nav::-webkit-scrollbar { display: none; }
 
 .tab-btn {
   padding: 8px 18px;
@@ -1068,12 +1170,196 @@ onMounted(() => {
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-  .dash-main { padding: 16px; }
+/* Stats section */
+.stats-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.stats-header { margin-bottom: 20px; }
+
+.stats-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.stats-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.stats-list { display: flex; flex-direction: column; gap: 16px; }
+
+.stat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.stat-rank {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--dark-3);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.rank-top { background: rgba(255,145,77,0.15); color: var(--accent); }
+
+.stat-content { flex: 1; min-width: 0; }
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.stat-bar-bg {
+  height: 8px;
+  background: var(--dark-3);
+  border-radius: 100px;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 6px;
+}
+
+.stat-bar-fill { height: 100%; transition: width 0.4s ease; }
+
+.stat-fill-high { background: var(--green); }
+.stat-fill-mid  { background: var(--yellow); }
+.stat-fill-low  { background: var(--red); }
+
+.stat-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.stat-ct-high  { font-size: 11px; color: var(--green);  font-weight: 600; }
+.stat-ct-mid   { font-size: 11px; color: var(--yellow); font-weight: 600; }
+.stat-ct-low   { font-size: 11px; color: var(--red);    font-weight: 600; }
+.stat-total    { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+.stat-avg {
+  flex-shrink: 0;
+  font-size: 22px;
+  font-weight: 800;
+  min-width: 50px;
+  text-align: right;
+  margin-top: 1px;
+  letter-spacing: -0.5px;
+}
+
+.avg-high { color: var(--green); }
+.avg-mid  { color: var(--yellow); }
+.avg-low  { color: var(--red); }
+
+/* =============================================
+   RESPONSIVE — Tablet (max 768px)
+   ============================================= */
+@media (max-width: 768px) {
+  .dash-main { padding: 16px; gap: 16px; }
   .topbar    { padding: 0 16px; }
+
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+
+  /* Table → card layout */
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td { display: block; width: 100%; min-width: 0; }
+
+  .data-table thead {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .data-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+    padding: 14px 16px;
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .data-table td {
+    padding: 0;
+    border-bottom: none !important;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 13px;
+  }
+
+  .data-table td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+
+  .td-action {
+    grid-column: 1 / -1;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: flex-start;
+    border-top: 1px solid var(--border);
+    padding-top: 10px !important;
+    margin-top: 4px;
+  }
+
+  .td-action::before { display: none; }
+  .td-contact { max-width: none; white-space: normal; overflow: visible; text-overflow: clip; }
+
+  .modal-card { max-width: 100%; border-radius: 0; }
+
+  .stats-section { padding: 16px; }
+  .stat-total    { margin-left: 0; }
+}
+
+/* =============================================
+   RESPONSIVE — Mobile (max 480px)
+   ============================================= */
+@media (max-width: 480px) {
+  .dash-main   { padding: 12px; gap: 12px; }
+  .topbar      { padding: 0 12px; height: 50px; }
   .topbar-user { display: none; }
-  .modal-card { max-width: 100%; }
-  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .topbar-title { font-size: 15px; }
+  .btn-logout  { font-size: 12px; padding: 4px 10px; }
+
+  .kpi-row   { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .kpi-card  { padding: 14px; gap: 10px; }
+  .kpi-value { font-size: 22px; }
+  .kpi-icon  { font-size: 22px; }
+
+  .filters-bar { flex-direction: column; }
+  .filter-input,
+  .filter-select,
+  .btn-refresh { width: 100%; }
+
+  .data-row { grid-template-columns: 1fr; }
+
+  .modal-card { border-left: none; }
+
+  .stat-row  { gap: 8px; }
+  .stat-avg  { font-size: 18px; min-width: 40px; }
+  .stat-legend { gap: 8px; }
 }
 </style>

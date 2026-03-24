@@ -257,16 +257,8 @@
        WHATSAPP CAPTURE CARD (step final antes del resultado)
     ============================================================ */
     #wa-card {
-      background: var(--card);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: var(--radius-lg);
-      padding: 44px 40px;
-      box-shadow: var(--shadow-card);
-      display: none;
-      animation: slideUp 0.42s cubic-bezier(0.4,0,0.2,1);
+      display: none !important;
     }
-
-    #wa-card.active { display: block; }
 
     .wa-eyebrow {
       font-size: 0.72rem;
@@ -1165,7 +1157,20 @@
           if (nextId === 'wa') {
             calcScore();
             progressWrap.style.display = 'none';
-            waCard.classList.add('active');
+            // Guardar submission directo (wa-card eliminado)
+            if (window.db && window.fb) {
+              window.fb.addDoc(
+                window.fb.collection(window.db, 'form_submissions'),
+                {
+                  ...leadData,
+                  score,
+                  answers,
+                  landingId: 'comercio',
+                  createdAt: window.fb.serverTimestamp()
+                }
+              ).catch(err => console.error('[LinkUp Firestore]', err));
+            }
+            showResult();
           } else {
             showQuestion(nextId);
           }
