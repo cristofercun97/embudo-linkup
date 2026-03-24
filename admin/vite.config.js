@@ -9,9 +9,6 @@ export default defineConfig({
     emptyOutDir: true
   },
   server: {
-    fs: {
-      // Allow serving files from the project root (one level above admin/)
-      allow: ['..']
-    }
+    fs: { allow: ['..'] }
   }
 })

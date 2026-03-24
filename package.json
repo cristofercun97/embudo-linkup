@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev":   "cd admin && node node_modules/vite/bin/vite.js",
-    "build": "cd admin && node node_modules/vite/bin/vite.js build"
+    "dev":       "npx serve . --listen 3000 --no-clipboard",
+    "dev:admin": "cd admin && node node_modules/vite/bin/vite.js",
+    "build":     "cd admin && node node_modules/vite/bin/vite.js build"
   }
 }
