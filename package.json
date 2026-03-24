@@ -1,0 +1,9 @@
+{
+  "name": "embudo-web-linkup",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev":   "cd admin && node node_modules/vite/bin/vite.js",
+    "build": "cd admin && node node_modules/vite/bin/vite.js build"
+  }
+}

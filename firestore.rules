@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /form_submissions/{docId} {
+      // Public can create (submit forms / surveys)
+      allow create: if true;
+      // Only authenticated admin can read, update, delete
+      allow read, update, delete: if request.auth != null
+        && request.auth.token.email == 'admin@linkup.com';
+    }
+  }
+}

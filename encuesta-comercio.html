@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Test LinkUp para Comercios — Descubre si tu negocio tiene el perfil ideal para crecer con LinkUp." />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Test — ¿Tu negocio es apto para LinkUp?</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ============================================================
+       QUIZ-SPECIFIC STYLES — patch sobre styles.css
+    ============================================================ */
+    #quiz-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 100px 20px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #quiz-page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(138,56,73,0.28) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(169,94,141,0.14) 0%, transparent 60%),
+        var(--dark);
+      z-index: 0;
+    }
+
+    #quiz-page::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+      z-index: 0;
+    }
+
+    .quiz-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 660px;
+    }
+
+    /* Progress bar */
+    .quiz-progress-wrap {
+      margin-bottom: 32px;
+    }
+
+    .quiz-progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .quiz-progress-label span:last-child { color: #d68ec4; }
+
+    .quiz-progress-track {
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50px;
+      overflow: hidden;
+    }
+
+    .quiz-progress-fill {
+      height: 100%;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Card container */
+    .quiz-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 44px 40px;
+      box-shadow: var(--shadow-card);
+      display: none;
+      animation: slideUp 0.42s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .quiz-card.active { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .quiz-step-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #d68ec4;
+      margin-bottom: 14px;
+    }
+
+    .quiz-question {
+      font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+      font-weight: 800;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      margin-bottom: 26px;
+      color: var(--white);
+    }
+
+    /* Options */
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 15px 20px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid rgba(255,255,255,0.09);
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: left;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.93rem;
+      font-weight: 500;
+      font-family: var(--font);
+      line-height: 1.45;
+      width: 100%;
+    }
+
+    .quiz-option:hover {
+      border-color: rgba(169,94,141,0.5);
+      background: rgba(169,94,141,0.08);
+      color: var(--white);
+      transform: translateX(4px);
+    }
+
+    .quiz-option.selected {
+      border-color: rgba(169,94,141,0.7);
+      background: linear-gradient(135deg, rgba(138,56,73,0.2), rgba(169,94,141,0.12));
+      color: var(--white);
+    }
+
+    .quiz-option-dot {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .quiz-option.selected .quiz-option-dot {
+      border-color: #A95E8D;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    }
+
+    .quiz-option.selected .quiz-option-dot::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    /* "Otro" open text field */
+    .quiz-other-input {
+      margin-top: 10px;
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 0.9rem;
+      color: var(--white);
+      font-family: var(--font);
+      outline: none;
+      transition: var(--transition);
+      display: none;
+    }
+
+    .quiz-other-input::placeholder { color: var(--muted); }
+
+    .quiz-other-input:focus {
+      border-color: rgba(169,94,141,0.6);
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Hint text */
+    .quiz-hint {
+      font-size: 0.77rem;
+      color: var(--muted);
+      margin-top: 12px;
+      padding-left: 4px;
+      font-style: italic;
+    }
+
+    /* Next button */
+    .quiz-next-wrap {
+      margin-top: 28px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-quiz-next {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--btn-start) 0%, var(--btn-end) 100%);
+      color: #1a0a00;
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 14px 30px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 6px 26px rgba(255,145,77,0.35);
+      opacity: 0.32;
+      pointer-events: none;
+    }
+
+    .btn-quiz-next.enabled {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .btn-quiz-next.enabled:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 10px 36px rgba(255,145,77,0.5);
+    }
+
+    /* ============================================================
+       WHATSAPP CAPTURE CARD (step final antes del resultado)
+    ============================================================ */
+    #wa-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 44px 40px;
+      box-shadow: var(--shadow-card);
+      display: none;
+      animation: slideUp 0.42s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    #wa-card.active { display: block; }
+
+    .wa-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #4ade80;
+      margin-bottom: 14px;
+    }
+
+    .wa-headline {
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .wa-sub {
+      font-size: 0.93rem;
+      color: rgba(255,255,255,0.62);
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+
+    .wa-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .wa-input {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      color: var(--white);
+      font-family: var(--font);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .wa-input::placeholder { color: var(--muted); }
+
+    .wa-input:focus {
+      border-color: rgba(169,94,141,0.6);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 3px rgba(169,94,141,0.12);
+    }
+
+    .wa-input.error { border-color: rgba(255,100,100,0.6); }
+
+    .wa-disclaimer {
+      font-size: 0.74rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .btn-wa-submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #25d366, #128C7E);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 16px 32px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 6px 30px rgba(37,211,102,0.3);
+      font-family: var(--font);
+    }
+
+    .btn-wa-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(37,211,102,0.45);
+    }
+
+    .wa-skip {
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .wa-skip button {
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: var(--transition);
+    }
+
+    .wa-skip button:hover { color: var(--white); }
+
+    /* ============================================================
+       RESULT CARD
+    ============================================================ */
+    #result-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 52px 40px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      display: none;
+      animation: slideUp 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    #result-card.active { display: block; }
+
+    .result-icon { font-size: 3.2rem; margin-bottom: 20px; line-height: 1; }
+
+    .result-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+    }
+
+    .result-tag.match-high {
+      background: rgba(74,222,128,0.15);
+      border: 1px solid rgba(74,222,128,0.35);
+      color: #4ade80;
+    }
+
+    .result-tag.match-mid {
+      background: rgba(255,220,77,0.15);
+      border: 1px solid rgba(255,220,77,0.35);
+      color: #ffdc4d;
+    }
+
+    .result-tag.match-low {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--muted);
+    }
+
+    .result-headline {
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .result-body {
+      font-size: 0.98rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      max-width: 500px;
+      margin: 0 auto 32px;
+    }
+
+    .result-bullets {
+      list-style: none;
+      text-align: left;
+      max-width: 420px;
+      margin: 0 auto 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.5;
+    }
+
+    .result-bullets li::before {
+      content: '→';
+      color: #ff914d;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .result-cta-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .result-retry {
+      font-size: 0.82rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: var(--transition);
+      background: none;
+      border: none;
+      font-family: var(--font);
+    }
+
+    .result-retry:hover { color: var(--white); }
+
+    /* ============================================================
+       INTRO CARD
+    ============================================================ */
+    #intro-card {
+      text-align: center;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 52px 40px;
+      box-shadow: var(--shadow-card);
+      animation: slideUp 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #intro-card h1 {
+      font-size: clamp(1.5rem, 3.8vw, 2.1rem);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.22;
+      margin-bottom: 16px;
+    }
+
+    #intro-card p {
+      font-size: 0.97rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      max-width: 460px;
+      margin: 0 auto 32px;
+    }
+
+    .intro-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .quiz-card, #result-card, #intro-card, #wa-card {
+        padding: 30px 20px;
+      }
+
+      .quiz-next-wrap { justify-content: center; }
+
+      .btn-quiz-next {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <header id="top-bar" role="banner">
+    <a href="comercios.html" class="logo-mark" style="text-decoration:none;">
+      <img src="img/logo-linkup.png" alt="LinkUp logo" class="logo-img" />
+      LinkUp
+    </a>
+    <a href="comercios.html" class="top-bar-cta" style="background:transparent; color:var(--muted); border:1.5px solid rgba(255,255,255,0.1);">← Volver</a>
+  </header>
+
+
+  <!-- QUIZ PAGE -->
+  <main id="quiz-page" role="main" aria-label="Test para comercios — ¿Tu negocio es apto para LinkUp?">
+    <div class="quiz-shell">
+
+      <!-- ================================================
+           INTRO CARD
+      ================================================ -->
+      <div id="intro-card">
+        <div class="label-tag" style="margin-bottom: 20px;">Evaluación para comercios</div>
+        <h1>
+          ¿Tu negocio tiene el perfil<br />
+          <span class="gradient-text">ideal para LinkUp?</span>
+        </h1>
+        <p>
+          10 preguntas para evaluar si tu comercio encaja con el sistema de LinkUp
+          y tiene potencial real de crecimiento dentro de la red.
+          Sin rodeos. Resultado inmediato.
+        </p>
+        <div class="intro-pills">
+          <div class="survey-feature-pill">🏪 Para comercios</div>
+          <div class="survey-feature-pill">⚡ 2 minutos</div>
+          <div class="survey-feature-pill">🎯 Resultado personalizado</div>
+          <div class="survey-feature-pill">🔒 Sin spam</div>
+        </div>
+        <button class="btn-primary" id="start-quiz-btn"
+                style="font-size:1rem; padding:16px 40px;">
+          Evaluar mi negocio
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- PROGRESS BAR -->
+      <div class="quiz-progress-wrap" id="progress-wrap" style="display:none;">
+        <div class="quiz-progress-label">
+          <span id="progress-text">Pregunta 1 de 10</span>
+          <span id="progress-pct">10%</span>
+        </div>
+        <div class="quiz-progress-track">
+          <div class="quiz-progress-fill" id="progress-fill" style="width:10%;"></div>
+        </div>
+      </div>
+
+      <!-- ================================================
+           PREGUNTAS
+      ================================================ -->
+
+      <!-- P1 -->
+      <div class="quiz-card" id="q1" role="group" aria-labelledby="q1-label">
+        <div class="quiz-step-eyebrow">Tipo de negocio</div>
+        <p class="quiz-question" id="q1-label">¿A qué tipo de negocio pertenece tu comercio?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2" data-label="Restaurante / Cafetería">
+            <span class="quiz-option-dot"></span>🍽️ Restaurante / Cafetería
+          </button>
+          <button class="quiz-option" data-value="2" data-label="Retail (ropa, accesorios, etc.)">
+            <span class="quiz-option-dot"></span>👗 Retail (ropa, accesorios, etc.)
+          </button>
+          <button class="quiz-option" data-value="2" data-label="Servicios (salud, belleza, etc.)">
+            <span class="quiz-option-dot"></span>💆 Servicios (salud, belleza, etc.)
+          </button>
+          <button class="quiz-option" data-value="2" data-label="Tecnología / Electrónica">
+            <span class="quiz-option-dot"></span>💻 Tecnología / Electrónica
+          </button>
+          <button class="quiz-option" data-value="1" data-label="Otro" data-other="true">
+            <span class="quiz-option-dot"></span>Otro
+          </button>
+        </div>
+        <input type="text" class="quiz-other-input" id="q1-other" placeholder="¿Qué tipo de negocio?" maxlength="80" />
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q2">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P2 -->
+      <div class="quiz-card" id="q2" role="group" aria-labelledby="q2-label">
+        <div class="quiz-step-eyebrow">Volumen del negocio</div>
+        <p class="quiz-question" id="q2-label">¿Cuántos clientes atiendes aproximadamente al mes?</p>
+        <p class="quiz-hint">Esto nos ayuda a entender el tamaño real de tu operación.</p>
+        <div class="quiz-options" style="margin-top:16px;">
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>Menos de 100
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>100 – 300
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>300 – 1.000
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Más de 1.000
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q3">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P3 -->
+      <div class="quiz-card" id="q3" role="group" aria-labelledby="q3-label">
+        <div class="quiz-step-eyebrow">Tu mayor desafío</div>
+        <p class="quiz-question" id="q3-label">¿Cuál es tu mayor desafío actualmente?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Conseguir nuevos clientes
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Fidelizar clientes actuales
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Aumentar ventas
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>Diferenciarme de la competencia
+          </button>
+          <button class="quiz-option" data-value="1" data-other="true">
+            <span class="quiz-option-dot"></span>Otro
+          </button>
+        </div>
+        <input type="text" class="quiz-other-input" id="q3-other" placeholder="Cuéntanos tu desafío" maxlength="100" />
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q4">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P4 -->
+      <div class="quiz-card" id="q4" role="group" aria-labelledby="q4-label">
+        <div class="quiz-step-eyebrow">Estrategia actual</div>
+        <p class="quiz-question" id="q4-label">¿Actualmente utilizas alguna estrategia para atraer clientes?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Redes sociales
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>Publicidad pagada
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Promociones / descuentos
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Referidos
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>No uso ninguna estrategia
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q5">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P5 -->
+      <div class="quiz-card" id="q5" role="group" aria-labelledby="q5-label">
+        <div class="quiz-step-eyebrow">Nivel de urgencia</div>
+        <p class="quiz-question" id="q5-label">¿Qué tan importante es para ti aumentar tus ventas en los próximos 3 meses?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>🔥 Muy importante — es prioridad ahora mismo
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>Importante, pero no es urgente
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>Poco importante por ahora
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q6">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P6 -->
+      <div class="quiz-card" id="q6" role="group" aria-labelledby="q6-label">
+        <div class="quiz-step-eyebrow">Validación de interés</div>
+        <p class="quiz-question" id="q6-label">¿Te interesaría atraer clientes nuevos sin depender de publicidad tradicional?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>✅ Sí — es exactamente lo que busco
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>Tal vez, dependería de cómo funciona
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>No, prefiero los métodos que ya uso
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q7">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P7 -->
+      <div class="quiz-card" id="q7" role="group" aria-labelledby="q7-label">
+        <div class="quiz-step-eyebrow">Mentalidad hacia el modelo</div>
+        <p class="quiz-question" id="q7-label">¿Qué opinas de ofrecer promociones o beneficios a cambio de atraer más clientes?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Me interesa totalmente — el descuento tiene que tener retorno
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>Lo consideraría si veo resultados claros
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>No me interesa dar descuentos
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q8">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P8 -->
+      <div class="quiz-card" id="q8" role="group" aria-labelledby="q8-label">
+        <div class="quiz-step-eyebrow">Validación de monetización</div>
+        <p class="quiz-question" id="q8-label">¿Estarías dispuesto a pagar una membresía anual si el sistema te genera clientes reales?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Sí — si hay resultados, la inversión se justifica
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>Depende del costo
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>No — prefiero no pagar membresías
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q9">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P9 -->
+      <div class="quiz-card" id="q9" role="group" aria-labelledby="q9-label">
+        <div class="quiz-step-eyebrow">Apertura digital</div>
+        <p class="quiz-question" id="q9-label">¿Qué tan abierto estás a implementar herramientas digitales en tu negocio?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Muy abierto — siempre busco mejorar
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>Medio — si es sencillo, sí
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>Poco — prefiero lo que ya conozco
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q10">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P10 -->
+      <div class="quiz-card" id="q10" role="group" aria-labelledby="q10-label">
+        <div class="quiz-step-eyebrow">Última pregunta</div>
+        <p class="quiz-question" id="q10-label">¿Te gustaría recibir información para formar parte de una red que te traiga clientes constantemente?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>Sí — quiero saber más
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>No, por ahora no
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="wa" id="finish-btn">
+            Ver mi resultado
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================================================
+           WHATSAPP CAPTURE
+      ================================================ -->
+      <div id="wa-card">
+        <div class="wa-eyebrow">🟢 Paso final</div>
+        <h2 class="wa-headline">
+          Déjanos tu WhatsApp y te enviamos<br />
+          <span class="gradient-text">una estrategia personalizada gratis.</span>
+        </h2>
+        <p class="wa-sub">
+          Basado en tus respuestas, nuestro equipo preparará un análisis específico
+          para tu tipo de negocio. Sin spam. Sin compromiso.
+          Solo información que te puede ser útil.
+        </p>
+        <form class="wa-form" id="wa-form" novalidate>
+          <input
+            type="text"
+            class="wa-input"
+            id="wa-nombre"
+            name="nombre"
+            placeholder="Tu nombre"
+            autocomplete="given-name"
+            maxlength="60"
+          />
+          <input
+            type="tel"
+            class="wa-input"
+            id="wa-telefono"
+            name="telefono"
+            placeholder="Tu WhatsApp (ej. +52 55 1234 5678)"
+            autocomplete="tel"
+            maxlength="20"
+          />
+          <button type="submit" class="btn-wa-submit">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.535 5.845L.057 23.485a.5.5 0 00.609.61l5.733-1.505A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.883 0-3.647-.497-5.17-1.363l-.37-.214-3.404.893.908-3.316-.234-.381A9.953 9.953 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+            </svg>
+            Enviar y ver mi resultado
+          </button>
+          <p class="wa-disclaimer">
+            Tu información es privada. Solo será usada para enviarte la estrategia personalizada de LinkUp.
+            Puedes indicarnos en cualquier momento que no deseas más contacto.
+          </p>
+        </form>
+        <div class="wa-skip">
+          <button id="wa-skip-btn">Prefiero ver el resultado sin dejar mis datos</button>
+        </div>
+      </div>
+
+      <!-- ================================================
+           RESULT CARD
+      ================================================ -->
+      <div id="result-card" role="region" aria-live="polite" aria-label="Resultado de tu evaluación">
+        <div class="result-icon" id="result-icon">🎯</div>
+        <div class="result-tag" id="result-tag">Resultado</div>
+        <h2 class="result-headline" id="result-headline"></h2>
+        <p class="result-body" id="result-body"></p>
+        <ul class="result-bullets" id="result-bullets"></ul>
+        <div class="result-cta-group">
+          <a href="comercios.html" class="btn-primary" id="result-cta"
+             style="font-size:1rem; padding:16px 36px;">
+            Quiero saber más sobre LinkUp
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <p style="font-size:0.8rem; color:rgba(255,255,255,0.4); margin-top:4px;" id="result-microcopy"></p>
+          <button class="result-retry" id="retry-btn">↩ Volver a evaluar</button>
+        </div>
+      </div>
+
+    </div><!-- /.quiz-shell -->
+  </main>
+
+
+  <!-- ============================================================
+       FIREBASE SDK
+  ============================================================ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyBy7oBzUZzAjLaBRlXwfS5_so31ASHk7CM",
+      authDomain: "linkup-encuesta-2026.firebaseapp.com",
+      projectId: "linkup-encuesta-2026",
+      storageBucket: "linkup-encuesta-2026.firebasestorage.app",
+      messagingSenderId: "74475292124",
+      appId: "1:74475292124:web:81a7ffe045724f25c0bb19"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+    window.fb = { collection, addDoc, serverTimestamp };
+  </script>
+
+  <!-- ============================================================
+       JAVASCRIPT — Quiz logic
+  ============================================================ -->
+  <script src="main.js"></script>
+  <script>
+    (function () {
+      const TOTAL = 10;
+      let score = 0;
+      let answers = {};
+      let waSubmitted = false;
+
+      const introCard    = document.getElementById('intro-card');
+      const progressWrap = document.getElementById('progress-wrap');
+      const progressFill = document.getElementById('progress-fill');
+      const progressText = document.getElementById('progress-text');
+      const progressPct  = document.getElementById('progress-pct');
+      const waCard       = document.getElementById('wa-card');
+      const resultCard   = document.getElementById('result-card');
+      const startBtn     = document.getElementById('start-quiz-btn');
+      const retryBtn     = document.getElementById('retry-btn');
+      const waForm       = document.getElementById('wa-form');
+      const waSkipBtn    = document.getElementById('wa-skip-btn');
+
+      const questions = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+
+      // ---------- START ----------
+      startBtn.addEventListener('click', () => {
+        introCard.style.display = 'none';
+        progressWrap.style.display = 'block';
+        showQuestion('q1');
+      });
+
+      // ---------- OPTION SELECT ----------
+      document.querySelectorAll('.quiz-options').forEach(group => {
+        group.querySelectorAll('.quiz-option').forEach(btn => {
+          btn.addEventListener('click', () => {
+            group.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+
+            const card = btn.closest('.quiz-card');
+            const nextBtn = card.querySelector('.btn-quiz-next');
+            nextBtn.classList.add('enabled');
+
+            // "Otro" field visibility
+            const otherInput = card.querySelector('.quiz-other-input');
+            if (otherInput) {
+              otherInput.style.display = btn.dataset.other === 'true' ? 'block' : 'none';
+            }
+
+            answers[card.id] = parseInt(btn.dataset.value, 10);
+          });
+        });
+      });
+
+      // ---------- NEXT ----------
+      document.querySelectorAll('.btn-quiz-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!btn.classList.contains('enabled')) return;
+          const nextId = btn.dataset.next;
+          btn.closest('.quiz-card').classList.remove('active');
+
+          if (nextId === 'wa') {
+            calcScore();
+            progressWrap.style.display = 'none';
+            waCard.classList.add('active');
+          } else {
+            showQuestion(nextId);
+          }
+        });
+      });
+
+      // ---------- SHOW QUESTION ----------
+      function showQuestion(id) {
+        document.querySelectorAll('.quiz-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        updateProgress(id);
+      }
+
+      // ---------- PROGRESS ----------
+      function updateProgress(id) {
+        const idx = questions.indexOf(id) + 1;
+        const pct = Math.round((idx / TOTAL) * 100);
+        progressFill.style.width = pct + '%';
+        progressText.textContent = `Pregunta ${idx} de ${TOTAL}`;
+        progressPct.textContent  = pct + '%';
+      }
+
+      // ---------- CALC SCORE ----------
+      function calcScore() {
+        score = Object.values(answers).reduce((a, b) => a + b, 0);
+      }
+
+      // ---------- WA FORM SUBMIT ----------
+      waForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nombre    = document.getElementById('wa-nombre').value.trim();
+        const telefono  = document.getElementById('wa-telefono').value.trim();
+
+        let valid = true;
+
+        if (!nombre) {
+          document.getElementById('wa-nombre').classList.add('error');
+          valid = false;
+        } else {
+          document.getElementById('wa-nombre').classList.remove('error');
+        }
+
+        // Basic phone validation: at least 7 digits
+        if (!telefono || telefono.replace(/\D/g, '').length < 7) {
+          document.getElementById('wa-telefono').classList.add('error');
+          valid = false;
+        } else {
+          document.getElementById('wa-telefono').classList.remove('error');
+        }
+
+        if (!valid) return;
+
+        waSubmitted = true;
+
+        const waSubmitBtn = waForm.querySelector('button[type="submit"]');
+        if (waSubmitBtn) waSubmitBtn.disabled = true;
+
+        if (window.db && window.fb) {
+          window.fb.addDoc(
+            window.fb.collection(window.db, 'form_submissions'),
+            {
+              nombre,
+              telefono,
+              score,
+              answers,
+              landingId: 'comercios',
+              createdAt: window.fb.serverTimestamp()
+            }
+          ).catch(err => console.error('[LinkUp Firestore]', err));
+        }
+
+        console.log('[LinkUp Comercios] Lead:', { nombre, telefono, score, answers });
+
+        waCard.classList.remove('active');
+        showResult();
+      });
+
+      // ---------- WA SKIP ----------
+      waSkipBtn.addEventListener('click', () => {
+        waCard.classList.remove('active');
+        showResult();
+      });
+
+      // ---------- SHOW RESULT ----------
+      function showResult() {
+        resultCard.classList.add('active');
+
+        const maxScore = TOTAL * 2; // 20
+        const icon     = document.getElementById('result-icon');
+        const tag      = document.getElementById('result-tag');
+        const headline = document.getElementById('result-headline');
+        const body     = document.getElementById('result-body');
+        const bullets  = document.getElementById('result-bullets');
+        const cta      = document.getElementById('result-cta');
+        const micro    = document.getElementById('result-microcopy');
+
+        bullets.innerHTML = '';
+
+        if (score >= 14) {
+          // 🟢 COMERCIO IDEAL
+          icon.textContent = '🟢';
+          tag.className = 'result-tag match-high';
+          tag.textContent = 'Perfil ideal — Comercio LinkUp';
+          headline.innerHTML = 'Tu negocio tiene el perfil <span class="gradient-text">ideal para LinkUp.</span>';
+          body.textContent = 'Cumples con los criterios clave: volumen de clientes, urgencia de crecimiento y apertura al modelo. Este es el tipo de comercio que más se beneficia del ecosistema LinkUp desde el primer día.';
+          [
+            'Volumen de clientes compatible con el sistema',
+            'Interés real en atraer nuevos clientes',
+            'Apertura a herramientas y modelos modernos',
+            'Disposición a invertir si hay resultados'
+          ].forEach(b => addBullet(bullets, b));
+          cta.textContent = '✅ Quiero unir mi negocio a LinkUp';
+          cta.style.boxShadow = '0 8px 40px rgba(255,145,77,0.5)';
+          micro.textContent = waSubmitted ? 'Te contactaremos pronto con tu estrategia personalizada.' : 'Cuéntanos más sobre tu negocio';
+
+        } else if (score >= 7) {
+          // 🟡 COMERCIO EDUCABLE
+          icon.textContent = '🟡';
+          tag.className = 'result-tag match-mid';
+          tag.textContent = 'Buena base — con potencial';
+          headline.innerHTML = 'Tu negocio tiene potencial.<br /><span class="gradient-text">Pero necesita un poco más de contexto.</span>';
+          body.textContent = 'Hay puntos de conexión claros con LinkUp, pero también dudas que vale la pena resolver. Con la información correcta, tu comercio podría verse muy beneficiado por el sistema.';
+          [
+            'Hay interés en crecer, pero con precaución',
+            'El modelo LinkUp puede encajar con más información',
+            'Vale la pena explorar antes de decidir'
+          ].forEach(b => addBullet(bullets, b));
+          cta.textContent = 'Quiero entender mejor cómo funciona';
+          cta.style.boxShadow = '0 6px 30px rgba(255,145,77,0.35)';
+          micro.textContent = 'Sin compromiso — solo información';
+
+        } else {
+          // 🔴 COMERCIO NO ALINEADO
+          icon.textContent = '🔴';
+          tag.className = 'result-tag match-low';
+          tag.textContent = 'Por ahora, no es el momento ideal';
+          headline.innerHTML = 'LinkUp puede no ser<br /><span class="gradient-text">la prioridad para tu negocio ahora.</span>';
+          body.textContent = 'Basado en tus respuestas, tu comercio no cumple con los criterios clave para aprovechar al máximo el sistema de LinkUp en este momento. Eso puede cambiar — y si cambia, aquí estaremos.';
+          [
+            'El sistema está pensado para negocios con mayor volumen o urgencia',
+            'Si tu situación cambia, vuelve a hacer el test'
+          ].forEach(b => addBullet(bullets, b));
+          cta.textContent = 'Conocer más sobre LinkUp de todas formas';
+          cta.style.boxShadow = '0 4px 20px rgba(255,145,77,0.2)';
+          micro.textContent = '';
+        }
+
+        console.log('[LinkUp Comercios] Score:', score, '/', maxScore, '| Answers:', answers);
+      }
+
+      function addBullet(container, text) {
+        const li = document.createElement('li');
+        li.textContent = text;
+        container.appendChild(li);
+      }
+
+      // ---------- RETRY ----------
+      retryBtn.addEventListener('click', () => {
+        score = 0;
+        answers = {};
+        waSubmitted = false;
+
+        document.querySelectorAll('.quiz-card').forEach(c => {
+          c.classList.remove('active');
+          c.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+          c.querySelector('.btn-quiz-next').classList.remove('enabled');
+          const otherInput = c.querySelector('.quiz-other-input');
+          if (otherInput) otherInput.style.display = 'none';
+        });
+
+        document.querySelectorAll('.wa-input').forEach(i => {
+          i.value = '';
+          i.classList.remove('error');
+        });
+
+        resultCard.classList.remove('active');
+        waCard.classList.remove('active');
+        introCard.style.display = 'block';
+        progressWrap.style.display = 'none';
+      });
+
+      // ---------- INPUT ERROR CLEAR ----------
+      document.getElementById('wa-nombre').addEventListener('input', e => e.target.classList.remove('error'));
+      document.getElementById('wa-telefono').addEventListener('input', e => e.target.classList.remove('error'));
+
+    })();
+  </script>
+
+</body>
+</html>

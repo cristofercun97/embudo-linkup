@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Test LinkUp — Descubre en 30 segundos si LinkUp es para ti." />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Test — ¿Es LinkUp para ti?</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ============================================================
+       QUIZ-SPECIFIC STYLES — patch sobre styles.css
+    ============================================================ */
+    #quiz-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 100px 20px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #quiz-page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(138,56,73,0.28) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(169,94,141,0.14) 0%, transparent 60%),
+        var(--dark);
+      z-index: 0;
+    }
+
+    #quiz-page::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+      z-index: 0;
+    }
+
+    .quiz-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    /* Progress bar */
+    .quiz-progress-wrap {
+      margin-bottom: 32px;
+    }
+
+    .quiz-progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .quiz-progress-label span:last-child {
+      color: #d68ec4;
+    }
+
+    .quiz-progress-track {
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50px;
+      overflow: hidden;
+    }
+
+    .quiz-progress-fill {
+      height: 100%;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Card container for each step */
+    .quiz-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 44px 40px;
+      box-shadow: var(--shadow-card);
+      display: none;
+      animation: slideUp 0.42s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .quiz-card.active {
+      display: block;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .quiz-step-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #d68ec4;
+      margin-bottom: 14px;
+    }
+
+    .quiz-question {
+      font-size: clamp(1.15rem, 3vw, 1.5rem);
+      font-weight: 800;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+      color: var(--white);
+    }
+
+    /* Options */
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid rgba(255,255,255,0.09);
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: left;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: var(--font);
+      line-height: 1.45;
+    }
+
+    .quiz-option:hover {
+      border-color: rgba(169,94,141,0.5);
+      background: rgba(169,94,141,0.08);
+      color: var(--white);
+      transform: translateX(4px);
+    }
+
+    .quiz-option.selected {
+      border-color: rgba(169,94,141,0.7);
+      background: linear-gradient(135deg, rgba(138,56,73,0.2), rgba(169,94,141,0.12));
+      color: var(--white);
+    }
+
+    .quiz-option-dot {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .quiz-option.selected .quiz-option-dot {
+      border-color: #A95E8D;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    }
+
+    .quiz-option.selected .quiz-option-dot::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    /* Next button */
+    .quiz-next-wrap {
+      margin-top: 28px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-quiz-next {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--btn-start) 0%, var(--btn-end) 100%);
+      color: #1a0a00;
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 14px 30px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 6px 26px rgba(255,145,77,0.35);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .btn-quiz-next.enabled {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .btn-quiz-next.enabled:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 10px 36px rgba(255,145,77,0.5);
+    }
+
+    /* ============================================================
+       RESULT CARD
+    ============================================================ */
+    #result-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 52px 40px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      display: none;
+      animation: slideUp 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    #result-card.active {
+      display: block;
+    }
+
+    .result-icon {
+      font-size: 3.2rem;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .result-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+    }
+
+    .result-tag.match-high {
+      background: rgba(74,222,128,0.15);
+      border: 1px solid rgba(74,222,128,0.35);
+      color: #4ade80;
+    }
+
+    .result-tag.match-mid {
+      background: rgba(255,220,77,0.15);
+      border: 1px solid rgba(255,220,77,0.35);
+      color: #ffdc4d;
+    }
+
+    .result-tag.match-low {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--muted);
+    }
+
+    .result-headline {
+      font-size: clamp(1.5rem, 4vw, 2.1rem);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .result-body {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      max-width: 480px;
+      margin: 0 auto 36px;
+    }
+
+    .result-score-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .result-score-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .score-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.3s;
+    }
+
+    .score-dot.filled {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    }
+
+    .result-cta-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .result-retry {
+      font-size: 0.82rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: var(--transition);
+      background: none;
+      border: none;
+      font-family: var(--font);
+    }
+
+    .result-retry:hover { color: var(--white); }
+
+    /* ============================================================
+       INTRO CARD (step 0)
+    ============================================================ */
+    #intro-card {
+      text-align: center;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 52px 40px;
+      box-shadow: var(--shadow-card);
+      animation: slideUp 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #intro-card h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.22;
+      margin-bottom: 16px;
+    }
+
+    #intro-card p {
+      font-size: 0.97rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      max-width: 440px;
+      margin: 0 auto 32px;
+    }
+
+    .intro-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .quiz-card, #result-card, #intro-card {
+        padding: 32px 22px;
+      }
+
+      .quiz-next-wrap {
+        justify-content: center;
+      }
+
+      .btn-quiz-next {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <header id="top-bar" role="banner">
+    <a href="index.html" class="logo-mark" style="text-decoration:none;">
+      <img src="img/logo-linkup.png" alt="LinkUp logo" class="logo-img" />
+      LinkUp
+    </a>
+    <a href="index.html" class="top-bar-cta" style="background:transparent; color:var(--muted); border:1.5px solid rgba(255,255,255,0.1);">← Volver</a>
+  </header>
+
+
+  <!-- QUIZ PAGE -->
+  <main id="quiz-page" role="main" aria-label="Test — ¿Es LinkUp para ti?">
+    <div class="quiz-shell">
+
+      <!-- ================================================
+           INTRO CARD
+      ================================================ -->
+      <div id="intro-card">
+        <div class="label-tag" style="margin-bottom: 20px;">El test de 30 segundos</div>
+        <h1>
+          ¿Es LinkUp<br />
+          <span class="gradient-text">para ti?</span>
+        </h1>
+        <p>
+          7 preguntas rápidas para descubrir si LinkUp encaja con tu estilo de vida,
+          tus hábitos de consumo y lo que buscas.
+          Sin trampas. Sin ventas. Solo claridad.
+        </p>
+        <div class="intro-pills">
+          <div class="survey-feature-pill">⚡ Solo 30 segundos</div>
+          <div class="survey-feature-pill">🎯 Resultado inmediato</div>
+          <div class="survey-feature-pill">🔒 Sin datos previos</div>
+        </div>
+        <button class="btn-primary" id="start-quiz-btn"
+                style="font-size:1rem; padding: 16px 40px;">
+          Empezar el test
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ================================================
+           PROGRESS BAR (oculto en intro)
+      ================================================ -->
+      <div class="quiz-progress-wrap" id="progress-wrap" style="display:none;">
+        <div class="quiz-progress-label">
+          <span id="progress-text">Pregunta 1 de 7</span>
+          <span id="progress-pct">14%</span>
+        </div>
+        <div class="quiz-progress-track">
+          <div class="quiz-progress-fill" id="progress-fill" style="width:14%;"></div>
+        </div>
+      </div>
+
+      <!-- ================================================
+           PREGUNTAS
+      ================================================ -->
+
+      <!-- P1 -->
+      <div class="quiz-card" id="q1" role="group" aria-labelledby="q1-label">
+        <div class="quiz-step-eyebrow">Hábitos de consumo</div>
+        <p class="quiz-question" id="q1-label">
+          ¿Con qué frecuencia visitas cafeterías, restaurantes u otros negocios locales?
+        </p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            Casi todos los días
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            2 a 3 veces por semana
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Una vez por semana o menos
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>
+            Casi nunca
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q2">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P2 -->
+      <div class="quiz-card" id="q2" role="group" aria-labelledby="q2-label">
+        <div class="quiz-step-eyebrow">Comportamiento de recomendación</div>
+        <p class="quiz-question" id="q2-label">
+          Cuando descubres un lugar que te encanta, ¿qué haces?
+        </p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            Se lo cuento a mis amigos y familia de inmediato
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Lo recomiendo si alguien me pregunta
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Lo publico en redes sociales
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>
+            Me lo guardo para mí
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q3">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P3 -->
+      <div class="quiz-card" id="q3" role="group" aria-labelledby="q3-label">
+        <div class="quiz-step-eyebrow">Tu influencia real</div>
+        <p class="quiz-question" id="q3-label">
+          ¿Cuántas veces has recomendado un negocio sin recibir nada a cambio por ello?
+        </p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            Muchas veces — recomiendo lo que me gusta sin pensarlo
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Algunas veces
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>
+            Casi nunca recomiendo negocios
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q4">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P4 -->
+      <div class="quiz-card" id="q4" role="group" aria-labelledby="q4-label">
+        <div class="quiz-step-eyebrow">Lo que más te importa</div>
+        <p class="quiz-question" id="q4-label">
+          ¿Qué te interesaría más de una plataforma como LinkUp?
+        </p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            Ahorrar dinero en lugares que ya visito
+          </button>
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            Ganar algo por recomendar lo que me gusta
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Descubrir nuevos negocios en mi ciudad
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>
+            Ninguno me llama mucho la atención
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q5">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P5 -->
+      <div class="quiz-card" id="q5" role="group" aria-labelledby="q5-label">
+        <div class="quiz-step-eyebrow">Mentalidad sobre ingresos</div>
+        <p class="quiz-question" id="q5-label">
+          ¿Qué tan abierto/a estás a explorar formas de generar ingresos extra?
+        </p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            Muy abierto/a — me interesa bastante
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Depende de qué tan simple y sin riesgo sea
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>
+            Prefiero no mezclar consumo con ingresos
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q6">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P6 -->
+      <div class="quiz-card" id="q6" role="group" aria-labelledby="q6-label">
+        <div class="quiz-step-eyebrow">Tu relación con el comercio local</div>
+        <p class="quiz-question" id="q6-label">
+          ¿Qué tan importante es para ti apoyar negocios locales frente a grandes cadenas?
+        </p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            Muy importante — prefiero locales cuando puedo
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Me da igual mientras el servicio sea bueno
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>
+            Generalmente prefiero las grandes marcas
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="q7">
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- P7 -->
+      <div class="quiz-card" id="q7" role="group" aria-labelledby="q7-label">
+        <div class="quiz-step-eyebrow">Última pregunta</div>
+        <p class="quiz-question" id="q7-label">
+          Si pudieras hacer que tus recomendaciones cotidianas te generaran valor real, ¿lo harías?
+        </p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-value="2">
+            <span class="quiz-option-dot"></span>
+            ¡Sí, sin dudarlo! — mis recomendaciones ya tienen ese valor
+          </button>
+          <button class="quiz-option" data-value="1">
+            <span class="quiz-option-dot"></span>
+            Si es fácil y sin compromisos, sí
+          </button>
+          <button class="quiz-option" data-value="0">
+            <span class="quiz-option-dot"></span>
+            No me interesa mezclar eso con mi vida social
+          </button>
+        </div>
+        <div class="quiz-next-wrap">
+          <button class="btn-quiz-next" data-next="result" id="finish-btn">
+            Ver mi resultado
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================================================
+           RESULT CARD
+      ================================================ -->
+      <div id="result-card" role="region" aria-live="polite" aria-label="Tu resultado">
+        <div class="result-icon" id="result-icon">🎯</div>
+        <div class="result-tag" id="result-tag">Resultado</div>
+        <h2 class="result-headline" id="result-headline"></h2>
+        <p class="result-body" id="result-body"></p>
+        <div class="result-score-bar">
+          <span>Tu puntaje:</span>
+          <div class="result-score-dots" id="score-dots"></div>
+          <span id="score-label"></span>
+        </div>
+        <div class="result-cta-group">
+          <a href="#" class="btn-primary" id="result-cta" style="font-size:1rem; padding:16px 36px;">
+            Unirme a la lista de espera
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <p style="font-size:0.8rem; color:rgba(255,255,255,0.45); margin-top:4px;" id="result-microcopy"></p>
+          <button class="result-retry" id="retry-btn">↩ Volver a hacer el test</button>
+        </div>
+      </div>
+
+    </div><!-- /.quiz-shell -->
+  </main>
+
+
+  <!-- ============================================================
+       FIREBASE SDK
+  ============================================================ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyBy7oBzUZzAjLaBRlXwfS5_so31ASHk7CM",
+      authDomain: "linkup-encuesta-2026.firebaseapp.com",
+      projectId: "linkup-encuesta-2026",
+      storageBucket: "linkup-encuesta-2026.firebasestorage.app",
+      messagingSenderId: "74475292124",
+      appId: "1:74475292124:web:81a7ffe045724f25c0bb19"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+    window.fb = { collection, addDoc, serverTimestamp };
+  </script>
+
+  <!-- ============================================================
+       JAVASCRIPT — Quiz logic
+  ============================================================ -->
+  <script src="main.js"></script>
+  <script>
+    (function () {
+      const TOTAL = 7;
+      let currentStep = null;
+      let score = 0;
+      let answers = {};
+
+      const introCard     = document.getElementById('intro-card');
+      const progressWrap  = document.getElementById('progress-wrap');
+      const progressFill  = document.getElementById('progress-fill');
+      const progressText  = document.getElementById('progress-text');
+      const progressPct   = document.getElementById('progress-pct');
+      const resultCard    = document.getElementById('result-card');
+      const startBtn      = document.getElementById('start-quiz-btn');
+      const retryBtn      = document.getElementById('retry-btn');
+
+      const questions = ['q1','q2','q3','q4','q5','q6','q7'];
+
+      // ---------- START ----------
+      startBtn.addEventListener('click', () => {
+        introCard.style.display = 'none';
+        progressWrap.style.display = 'block';
+        showQuestion('q1');
+      });
+
+      // ---------- OPTION SELECT ----------
+      document.querySelectorAll('.quiz-options').forEach(group => {
+        group.querySelectorAll('.quiz-option').forEach(btn => {
+          btn.addEventListener('click', () => {
+            // Deselect siblings
+            group.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+
+            // Enable next button
+            const card = btn.closest('.quiz-card');
+            const nextBtn = card.querySelector('.btn-quiz-next');
+            nextBtn.classList.add('enabled');
+
+            // Store selection
+            const qId = card.id;
+            answers[qId] = parseInt(btn.dataset.value, 10);
+          });
+        });
+      });
+
+      // ---------- NEXT ----------
+      document.querySelectorAll('.btn-quiz-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!btn.classList.contains('enabled')) return;
+          const nextId = btn.dataset.next;
+          const currentCard = btn.closest('.quiz-card');
+          currentCard.classList.remove('active');
+
+          if (nextId === 'result') {
+            calcAndShowResult();
+          } else {
+            showQuestion(nextId);
+          }
+        });
+      });
+
+      // ---------- SHOW QUESTION ----------
+      function showQuestion(id) {
+        currentStep = id;
+        document.querySelectorAll('.quiz-card').forEach(c => c.classList.remove('active'));
+        const card = document.getElementById(id);
+        card.classList.add('active');
+        updateProgress(id);
+      }
+
+      // ---------- PROGRESS ----------
+      function updateProgress(id) {
+        const idx = questions.indexOf(id) + 1;
+        const pct = Math.round((idx / TOTAL) * 100);
+        progressFill.style.width = pct + '%';
+        progressText.textContent = `Pregunta ${idx} de ${TOTAL}`;
+        progressPct.textContent  = pct + '%';
+      }
+
+      // ---------- RESULT ----------
+      function calcAndShowResult() {
+        score = Object.values(answers).reduce((a, b) => a + b, 0);
+        const maxScore = TOTAL * 2; // 14
+
+        // Hide progress
+        progressWrap.style.display = 'none';
+        resultCard.classList.add('active');
+
+        // Score dots (7 dots = one per question)
+        const dotsWrap = document.getElementById('score-dots');
+        dotsWrap.innerHTML = '';
+        const filledDots = Math.round((score / maxScore) * 7);
+        for (let i = 0; i < 7; i++) {
+          const dot = document.createElement('span');
+          dot.className = 'score-dot' + (i < filledDots ? ' filled' : '');
+          dotsWrap.appendChild(dot);
+        }
+        document.getElementById('score-label').textContent = `${score} / ${maxScore} puntos`;
+
+        const icon     = document.getElementById('result-icon');
+        const tag      = document.getElementById('result-tag');
+        const headline = document.getElementById('result-headline');
+        const body     = document.getElementById('result-body');
+        const cta      = document.getElementById('result-cta');
+        const micro    = document.getElementById('result-microcopy');
+
+        if (score >= 10) {
+          // HIGH MATCH
+          icon.textContent = '🚀';
+          tag.className = 'result-tag match-high';
+          tag.textContent = 'Perfil ideal';
+          headline.innerHTML = 'LinkUp está <span class="gradient-text">hecho para ti.</span>';
+          body.textContent = 'Tu forma de consumir, recomendar y conectar encaja perfectamente con lo que LinkUp ofrece. Eres exactamente el tipo de persona que puede aprovechar al máximo el ecosistema — y beneficiarse desde el primer día.';
+          cta.textContent = '¡Quiero unirme a LinkUp!';
+          cta.style.boxShadow = '0 8px 40px rgba(255,145,77,0.5)';
+          micro.textContent = 'Sé de las primeras personas en acceder';
+        } else if (score >= 5) {
+          // MID MATCH
+          icon.textContent = '💡';
+          tag.className = 'result-tag match-mid';
+          tag.textContent = 'Buena coincidencia';
+          headline.innerHTML = 'LinkUp tiene <span class="gradient-text">algo para ti.</span>';
+          body.textContent = 'Tu perfil encaja en varios puntos clave. Puede que no sea el momento perfecto, pero hay oportunidades claras dentro del ecosistema LinkUp que podrían darte valor real. Vale la pena explorar.';
+          cta.textContent = 'Explorar más sobre LinkUp';
+          cta.style.boxShadow = '0 6px 30px rgba(255,145,77,0.35)';
+          micro.textContent = 'Sin compromiso — solo información';
+        } else {
+          // LOW MATCH
+          icon.textContent = '🤔';
+          tag.className = 'result-tag match-low';
+          tag.textContent = 'Por ahora, quizás no';
+          headline.innerHTML = 'LinkUp puede <span class="gradient-text">no ser para ti aún.</span>';
+          body.textContent = 'Basado en tus respuestas, LinkUp no sería la mejor opción en este momento. Está diseñado para personas con hábitos de consumo frecuente y apertura a compartir oportunidades. Si eso cambia, siempre puedes volver.';
+          cta.textContent = 'Entender más qué es LinkUp';
+          cta.style.boxShadow = '0 4px 20px rgba(255,145,77,0.2)';
+          micro.textContent = 'Sin presión, solo por curiosidad';
+        }
+
+        // Save to Firestore
+        if (window.db && window.fb) {
+          window.fb.addDoc(window.fb.collection(window.db, 'form_submissions'), {
+            score,
+            maxScore,
+            answers,
+            landingId: 'afiliado',
+            isQualified: score >= 10,
+            status: 'new',
+            createdAt: window.fb.serverTimestamp()
+          }).catch(err => console.error('[LinkUp Firestore]', err));
+        }
+      }
+
+      // ---------- RETRY ----------
+      retryBtn.addEventListener('click', () => {
+        score = 0;
+        answers = {};
+
+        document.querySelectorAll('.quiz-card').forEach(c => {
+          c.classList.remove('active');
+          c.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+          c.querySelector('.btn-quiz-next').classList.remove('enabled');
+        });
+
+        resultCard.classList.remove('active');
+        introCard.style.display = 'block';
+        progressWrap.style.display = 'none';
+      });
+
+    })();
+  </script>
+
+</body>
+</html>
