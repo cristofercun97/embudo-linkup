@@ -1045,6 +1045,81 @@
       color: #d68ec4;
     }
 
+    .footer-social {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .footer-social a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.13);
+      color: var(--muted);
+      transition: var(--transition);
+    }
+
+    .footer-social a:hover {
+      border-color: rgba(169,94,141,0.6);
+      color: var(--white);
+      background: rgba(169,94,141,0.1);
+    }
+
+    .btn-wa {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-family: var(--font);
+      background: #25D366;
+      color: #fff;
+      text-decoration: none;
+      transition: opacity .2s, transform .15s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 28px rgba(37,211,102,0.35);
+    }
+
+    .btn-wa:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    /* Hero WA variant — más grande y prominente */
+    .btn-wa-hero {
+      font-size: 1.1rem;
+      padding: 16px 36px;
+      box-shadow: 0 8px 44px rgba(37,211,102,0.5);
+      animation: wa-pulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes wa-pulse {
+      0%, 100% { box-shadow: 0 8px 44px rgba(37,211,102,0.5); }
+      50%       { box-shadow: 0 10px 56px rgba(37,211,102,0.75); }
+    }
+
+    .btn-cuponera {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-family: var(--font);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      text-decoration: none;
+      border: 1.5px solid rgba(255,255,255,0.22);
+      transition: background .2s, border-color .2s, transform .15s;
+    }
+
+    .btn-cuponera:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.4); transform: translateY(-2px); }
+
     .footer-copy {
       font-size: 0.76rem;
       color: rgba(255,255,255,0.25);
@@ -1093,6 +1168,20 @@
       }
 
       .btn-primary { font-size: 0.95rem; padding: 15px 28px; }
+
+      .btn-wa, .btn-cuponera {
+        width: 100%;
+        max-width: 360px;
+        justify-content: center;
+      }
+
+      .result-cta-group .btn-primary,
+      .result-cta-group .btn-wa,
+      .result-cta-group .btn-cuponera {
+        width: 100%;
+        max-width: 360px;
+        justify-content: center;
+      }
 
       .social-proof-bar { gap: 10px; }
 
