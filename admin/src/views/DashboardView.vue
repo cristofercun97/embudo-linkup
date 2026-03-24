@@ -3,7 +3,7 @@
     <!-- TOP BAR -->
     <header class="topbar">
       <div class="topbar-left">
-        <img :src="'/img/logo-linkup.png'" alt="LinkUp" class="topbar-logo" />
+        <img :src="logoUrl" alt="LinkUp" class="topbar-logo" />
         <span class="topbar-title">LinkUp <em>Admin</em></span>
       </div>
       <div class="topbar-right">
@@ -52,21 +52,38 @@
         </div>
       </section>
 
+      <!-- TABS NAV -->
+      <div class="tabs-nav">
+        <button
+          class="tab-btn"
+          :class="{ 'tab-active': activeTab === 'enc-afiliados' }"
+          @click="activeTab = 'enc-afiliados'"
+        >🚀 Encuestas Afiliados</button>
+        <button
+          class="tab-btn"
+          :class="{ 'tab-active': activeTab === 'enc-comercios' }"
+          @click="activeTab = 'enc-comercios'"
+        >🏪 Encuestas Comercios</button>
+        <button
+          class="tab-btn"
+          :class="{ 'tab-active': activeTab === 'leads-afiliados' }"
+          @click="activeTab = 'leads-afiliados'"
+        >📌 Leads Afiliados</button>
+        <button
+          class="tab-btn"
+          :class="{ 'tab-active': activeTab === 'leads-comercios' }"
+          @click="activeTab = 'leads-comercios'"
+        >📌 Leads Comercios</button>
+      </div>
+
       <!-- FILTERS -->
-      <section class="filters-bar">
+      <section v-if="activeTab === 'enc-afiliados' || activeTab === 'enc-comercios'" class="filters-bar">
         <input
           v-model="searchQuery"
           class="filter-input filter-search"
           type="text"
           placeholder="Buscar por nombre, email o teléfono…"
         />
-
-        <select v-model="filterLanding" class="filter-select">
-          <option value="">Todos los orígenes</option>
-          <option value="afiliado">Afiliado</option>
-          <option value="comercio">Comercio</option>
-          <option value="newsletter">Newsletter</option>
-        </select>
 
         <select v-model="filterStatus" class="filter-select">
           <option value="">Todos los estados</option>
@@ -90,12 +107,12 @@
       </section>
 
       <!-- ERROR STATE -->
-      <div v-if="fetchError" class="error-banner">
+      <div v-if="(activeTab === 'enc-afiliados' || activeTab === 'enc-comercios') && fetchError" class="error-banner">
         ⚠️ {{ fetchError }}
       </div>
 
       <!-- TABLE -->
-      <section class="table-wrap">
+      <section v-if="activeTab === 'enc-afiliados' || activeTab === 'enc-comercios'" class="table-wrap">
         <div v-if="loading && !submissions.length" class="loading-state">
           <span class="big-spinner"></span>
           <p>Cargando envíos…</p>
@@ -153,7 +170,95 @@
         </table>
 
         <div v-if="filteredRows.length" class="table-footer">
-          Mostrando {{ filteredRows.length }} de {{ submissions.length }} registros
+          Mostrando {{ filteredRows.length }} de {{ activeTab === 'enc-afiliados' ? afiliadoCount : comercioCount }} registros
+        </div>
+      </section>
+
+      <!-- LEADS AFILIADOS -->
+      <section v-if="activeTab === 'leads-afiliados'" class="table-wrap">
+        <div v-if="leadsError" class="error-banner">⚠️ {{ leadsError }}</div>
+        <div v-else-if="leadsLoading" class="loading-state">
+          <span class="big-spinner"></span>
+          <p>Cargando leads…</p>
+        </div>
+        <div v-else-if="!leadsAfiliados.length" class="empty-state">
+          <span class="empty-icon">📋</span>
+          <p>Aún no hay leads de afiliados registrados.</p>
+        </div>
+        <table v-else class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Nombre</th>
+              <th>Edad</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="lead in leadsAfiliados" :key="lead.id" class="data-row">
+              <td class="td-date">{{ formatDate(lead.createdAt) }}</td>
+              <td>{{ lead.nombre || '—' }}</td>
+              <td>{{ lead.edad ?? '—' }}</td>
+              <td>{{ lead.email || '—' }}</td>
+              <td>
+                <a v-if="lead.telefono"
+                   :href="'https://wa.me/' + sanitizePhone(lead.telefono)"
+                   target="_blank" rel="noopener" class="wa-link">
+                  {{ lead.telefono }} 💬
+                </a>
+                <span v-else>—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="leadsAfiliados.length" class="table-footer">
+          {{ leadsAfiliados.length }} lead{{ leadsAfiliados.length !== 1 ? 's' : '' }} de afiliados
+        </div>
+      </section>
+
+      <!-- LEADS COMERCIOS -->
+      <section v-if="activeTab === 'leads-comercios'" class="table-wrap">
+        <div v-if="leadsError" class="error-banner">⚠️ {{ leadsError }}</div>
+        <div v-else-if="leadsLoading" class="loading-state">
+          <span class="big-spinner"></span>
+          <p>Cargando leads…</p>
+        </div>
+        <div v-else-if="!leadsComercio.length" class="empty-state">
+          <span class="empty-icon">🏪</span>
+          <p>Aún no hay leads de comercios registrados.</p>
+        </div>
+        <table v-else class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Nombre</th>
+              <th>Nicho</th>
+              <th>Negocio</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="lead in leadsComercio" :key="lead.id" class="data-row">
+              <td class="td-date">{{ formatDate(lead.createdAt) }}</td>
+              <td>{{ lead.nombre || '—' }}</td>
+              <td>{{ lead.nicho || '—' }}</td>
+              <td>{{ lead.nombreNegocio || '—' }}</td>
+              <td>{{ lead.email || '—' }}</td>
+              <td>
+                <a v-if="lead.telefono"
+                   :href="'https://wa.me/' + sanitizePhone(lead.telefono)"
+                   target="_blank" rel="noopener" class="wa-link">
+                  {{ lead.telefono }} 💬
+                </a>
+                <span v-else>—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="leadsComercio.length" class="table-footer">
+          {{ leadsComercio.length }} lead{{ leadsComercio.length !== 1 ? 's' : '' }} de comercios
         </div>
       </section>
     </main>
@@ -250,6 +355,7 @@ import {
   collection, getDocs, updateDoc, doc, orderBy, query
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+import logoUrl from '../../../img/logo-linkup.png'
 
 const router = useRouter()
 const userEmail = computed(() => auth.currentUser?.email ?? '')
@@ -259,10 +365,15 @@ const submissions = ref([])
 const loading     = ref(false)
 const fetchError  = ref('')
 const activeRow   = ref(null)
+const activeTab   = ref('enc-afiliados')
+
+// Leads
+const leads        = ref([])
+const leadsLoading = ref(false)
+const leadsError   = ref('')
 
 // Filters
 const searchQuery   = ref('')
-const filterLanding = ref('')
 const filterStatus  = ref('')
 const filterDays    = ref(0)
 
@@ -281,15 +392,21 @@ const comercioCount   = computed(() => submissions.value.filter(s => s.landingId
 const newsletterCount = computed(() => submissions.value.filter(s => s.landingId === 'newsletter').length)
 const qualifiedCount  = computed(() => submissions.value.filter(s => s.isQualified).length)
 
+const leadsAfiliados = computed(() => leads.value.filter(l => l.landingId === 'afiliado'))
+const leadsComercio  = computed(() => leads.value.filter(l => l.landingId === 'comercio'))
+
 // Filtered rows
 const filteredRows = computed(() => {
-  const q   = searchQuery.value.toLowerCase()
-  const now = Date.now()
+  const q    = searchQuery.value.toLowerCase()
+  const now  = Date.now()
   const days = Number(filterDays.value)
+  const tabLanding = activeTab.value === 'enc-afiliados' ? 'afiliado'
+                   : activeTab.value === 'enc-comercios'  ? 'comercio'
+                   : null
 
   return submissions.value.filter(row => {
-    if (filterLanding.value && row.landingId !== filterLanding.value) return false
-    if (filterStatus.value  && (row.status || 'new') !== filterStatus.value) return false
+    if (tabLanding && row.landingId !== tabLanding) return false
+    if (filterStatus.value && (row.status || 'new') !== filterStatus.value) return false
 
     if (days > 0 && row.createdAt) {
       const rowTime = row.createdAt.toMillis
@@ -311,15 +428,44 @@ const filteredRows = computed(() => {
 async function loadSubmissions() {
   loading.value = true
   fetchError.value = ''
+  const path = 'form_submissions'
   try {
-    const q   = query(collection(db, 'form_submissions'), orderBy('createdAt', 'desc'))
+    const q    = query(collection(db, path), orderBy('createdAt', 'desc'))
     const snap = await getDocs(q)
     submissions.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
   } catch (err) {
-    console.error('[Admin] Firestore error:', err)
-    fetchError.value = 'No se pudieron cargar los datos. Verifica permisos y conexión.'
+    const isBlocked = err?.message?.includes('ERR_BLOCKED_BY_CLIENT') ||
+                      err?.message?.includes('Failed to fetch') ||
+                      err?.code === 'unavailable'
+    const detail = `[${err.code ?? 'unknown'}] ${err.message ?? err}`
+    console.error(`[Admin] /${path} —`, detail, err)
+    fetchError.value = isBlocked
+      ? `⚠️ Parece que el navegador o una extensión está bloqueando Firestore. Prueba en incógnito o deshabilita el adblocker. (${detail})`
+      : `No se pudieron cargar envíos. ${detail}`
   } finally {
     loading.value = false
+  }
+}
+
+async function loadLeads() {
+  leadsLoading.value = true
+  leadsError.value = ''
+  const path = 'leads'
+  try {
+    const q    = query(collection(db, path), orderBy('createdAt', 'desc'))
+    const snap = await getDocs(q)
+    leads.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  } catch (err) {
+    const isBlocked = err?.message?.includes('ERR_BLOCKED_BY_CLIENT') ||
+                      err?.message?.includes('Failed to fetch') ||
+                      err?.code === 'unavailable'
+    const detail = `[${err.code ?? 'unknown'}] ${err.message ?? err}`
+    console.error(`[Admin] /${path} —`, detail, err)
+    leadsError.value = isBlocked
+      ? `⚠️ Parece que el navegador o una extensión está bloqueando Firestore. Prueba en incógnito o deshabilita el adblocker. (${detail})`
+      : `No se pudieron cargar leads. ${detail}`
+  } finally {
+    leadsLoading.value = false
   }
 }
 
@@ -327,11 +473,10 @@ async function updateStatus(row, newStatus) {
   try {
     await updateDoc(doc(db, 'form_submissions', row.id), { status: newStatus })
     row.status = newStatus
-    // also update in submissions array
     const idx = submissions.value.findIndex(s => s.id === row.id)
     if (idx !== -1) submissions.value[idx].status = newStatus
   } catch (err) {
-    console.error('[Admin] updateDoc error:', err)
+    console.error(`[Admin] updateDoc form_submissions/${row.id} — [${err.code}] ${err.message}`, err)
   }
 }
 
@@ -399,7 +544,10 @@ function sanitizePhone(phone) {
   return phone.replace(/\D/g, '')
 }
 
-onMounted(loadSubmissions)
+onMounted(() => {
+  loadSubmissions()
+  loadLeads()
+})
 </script>
 
 <style scoped>
@@ -886,6 +1034,39 @@ onMounted(loadSubmissions)
 
 /* Muted text */
 .muted { color: var(--muted); }
+
+/* Tabs navigation */
+.tabs-nav {
+  display: flex;
+  gap: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.tab-btn:hover { color: var(--text); }
+
+.tab-active {
+  background: var(--dark-3);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
 
 /* Responsive */
 @media (max-width: 600px) {

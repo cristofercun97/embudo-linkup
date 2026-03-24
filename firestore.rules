@@ -5,9 +5,15 @@ service cloud.firestore {
     match /form_submissions/{docId} {
       // Public can create (submit forms / surveys)
       allow create: if true;
-      // Only authenticated admin can read, update, delete
-      allow read, update, delete: if request.auth != null
-        && request.auth.token.email == 'admin@linkup.com';
+      // Any authenticated user can read, update, delete (admin panel login required)
+      allow read, update, delete: if request.auth != null;
+    }
+
+    match /leads/{docId} {
+      // Public can create (registration before quiz)
+      allow create: if true;
+      // Any authenticated user can read, update, delete
+      allow read, update, delete: if request.auth != null;
     }
   }
 }

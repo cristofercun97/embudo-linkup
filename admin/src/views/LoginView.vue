@@ -70,20 +70,27 @@ async function handleLogin() {
     await signInWithEmailAndPassword(auth, email.value, password.value)
     router.push('/')
   } catch (err) {
-    errorMsg.value = friendlyError(err.code)
+    console.error('[Admin Login]', err.code, err.message, err)
+    errorMsg.value = friendlyError(err.code, err.message)
   } finally {
     loading.value = false
   }
 }
 
-function friendlyError(code) {
+function friendlyError(code, message) {
   if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
     return 'Email o contraseña incorrectos.'
   }
   if (code === 'auth/too-many-requests') {
     return 'Demasiados intentos. Espera unos minutos.'
   }
-  return 'Error al iniciar sesión. Intenta de nuevo.'
+  if (code === 'auth/operation-not-allowed') {
+    return 'El proveedor Email/Contraseña no está habilitado en Firebase. Actívalo en Authentication → Sign-in method.'
+  }
+  if (code === 'auth/network-request-failed') {
+    return 'Sin conexión o el navegador bloqueó la petición. Prueba en incógnito sin extensiones.'
+  }
+  return `Error al iniciar sesión. [${code ?? 'unknown'}] ${message ?? ''}`
 }
 </script>
 

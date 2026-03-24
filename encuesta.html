@@ -391,6 +391,66 @@
         justify-content: center;
       }
     }
+
+    /* ============================================================
+       REGISTRATION CARD (pre-quiz)
+    ============================================================ */
+    #reg-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      padding: 44px 40px;
+      box-shadow: var(--shadow-card);
+      display: none;
+      animation: slideUp 0.42s cubic-bezier(0.4,0,0.2,1);
+    }
+    #reg-card.active { display: block; }
+    .reg-eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: #d68ec4; margin-bottom: 14px;
+    }
+    .reg-headline {
+      font-size: clamp(1.2rem, 3vw, 1.55rem); font-weight: 900;
+      line-height: 1.25; letter-spacing: -0.02em; margin-bottom: 10px;
+    }
+    .reg-sub {
+      font-size: 0.91rem; color: rgba(255,255,255,0.6);
+      line-height: 1.6; margin-bottom: 24px;
+    }
+    .reg-form { display: flex; flex-direction: column; gap: 14px; }
+    .reg-input {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 14px 20px; font-size: 0.95rem;
+      color: var(--white); font-family: var(--font);
+      outline: none; transition: var(--transition);
+      width: 100%; box-sizing: border-box;
+    }
+    .reg-input::placeholder { color: var(--muted); }
+    .reg-input:focus {
+      border-color: rgba(169,94,141,0.6);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 3px rgba(169,94,141,0.12);
+    }
+    .reg-input.error { border-color: rgba(255,100,100,0.6); }
+    .reg-input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+    .reg-input[type=number]::-webkit-inner-spin-button,
+    .reg-input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .reg-error {
+      font-size: 0.82rem; color: rgba(255,100,100,0.8);
+      display: none; padding: 0 4px;
+    }
+    .btn-reg-submit {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      background: linear-gradient(135deg, var(--btn-start) 0%, var(--btn-end) 100%);
+      color: #1a0a00; font-weight: 800; font-size: 1rem;
+      padding: 15px 32px; border-radius: 50px; border: none; cursor: pointer;
+      transition: var(--transition); font-family: var(--font);
+      box-shadow: 0 6px 26px rgba(255,145,77,0.35);
+    }
+    .btn-reg-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(255,145,77,0.5); }
+    @media (max-width: 640px) { #reg-card { padding: 32px 22px; } }
   </style>
 </head>
 
@@ -436,6 +496,40 @@
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
+      </div>
+
+      <!-- ================================================
+           REGISTRO PRE-ENCUESTA (Afiliado)
+      ================================================ -->
+      <div id="reg-card">
+        <div class="reg-eyebrow">📋 Antes de empezar</div>
+        <h2 class="reg-headline">
+          Cuéntanos un poco<br />
+          <span class="gradient-text">sobre ti</span>
+        </h2>
+        <p class="reg-sub">
+          Necesitamos tus datos para registrar tu participación
+          y enviarte tu resultado personalizado.
+        </p>
+        <form class="reg-form" id="reg-form" novalidate>
+          <input type="text"   class="reg-input" id="reg-nombre"
+                 placeholder="Tu nombre completo"
+                 autocomplete="name" maxlength="60" />
+          <input type="number" class="reg-input" id="reg-edad"
+                 placeholder="Tu edad"
+                 min="14" max="99" />
+          <input type="email"  class="reg-input" id="reg-email"
+                 placeholder="Tu correo electrónico"
+                 autocomplete="email" maxlength="100" />
+          <input type="tel"    class="reg-input" id="reg-telefono"
+                 placeholder="Número de teléfono (ej. +52 55 1234 5678)"
+                 autocomplete="tel" maxlength="25" />
+          <p class="reg-error" id="reg-error">Por favor completa todos los campos correctamente.</p>
+          <button type="submit" class="btn-reg-submit">
+            Iniciar la encuesta
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </form>
       </div>
 
       <!-- ================================================
@@ -722,6 +816,8 @@
       let answers = {};
 
       const introCard     = document.getElementById('intro-card');
+      const regCard       = document.getElementById('reg-card');
+      const regForm       = document.getElementById('reg-form');
       const progressWrap  = document.getElementById('progress-wrap');
       const progressFill  = document.getElementById('progress-fill');
       const progressText  = document.getElementById('progress-text');
@@ -732,11 +828,52 @@
 
       const questions = ['q1','q2','q3','q4','q5','q6','q7'];
 
+      let hasRegistered = false;
+      let leadData = {};
+
       // ---------- START ----------
       startBtn.addEventListener('click', () => {
         introCard.style.display = 'none';
+        if (hasRegistered) {
+          progressWrap.style.display = 'block';
+          showQuestion('q1');
+        } else {
+          regCard.classList.add('active');
+        }
+      });
+
+      // ---------- REGISTRO ----------
+      regForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nombre   = document.getElementById('reg-nombre').value.trim();
+        const edad     = document.getElementById('reg-edad').value.trim();
+        const email    = document.getElementById('reg-email').value.trim();
+        const telefono = document.getElementById('reg-telefono').value.trim();
+        const errEl    = document.getElementById('reg-error');
+        const emailOk  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        const phoneOk  = telefono.replace(/\D/g, '').length >= 7;
+        if (!nombre || !edad || Number(edad) < 14 || !emailOk || !phoneOk) {
+          errEl.style.display = 'block';
+          return;
+        }
+        errEl.style.display = 'none';
+        leadData = { nombre, edad: parseInt(edad, 10), email, telefono };
+        hasRegistered = true;
+        if (window.db && window.fb) {
+          window.fb.addDoc(window.fb.collection(window.db, 'leads'), {
+            ...leadData,
+            landingId: 'afiliado',
+            createdAt: window.fb.serverTimestamp()
+          }).catch(err => console.error('[LinkUp Leads]', err));
+        }
+        regCard.classList.remove('active');
         progressWrap.style.display = 'block';
         showQuestion('q1');
+      });
+
+      ['reg-nombre', 'reg-edad', 'reg-email', 'reg-telefono'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', () => el.classList.remove('error'));
       });
 
       // ---------- OPTION SELECT ----------
@@ -855,6 +992,7 @@
         // Save to Firestore
         if (window.db && window.fb) {
           window.fb.addDoc(window.fb.collection(window.db, 'form_submissions'), {
+            ...leadData,
             score,
             maxScore,
             answers,
