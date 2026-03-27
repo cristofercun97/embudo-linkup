@@ -13,11 +13,16 @@ const routes = [
     name: 'Dashboard',
     component: () => import('../views/DashboardView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    // Catch-all: cualquier ruta desconocida (ej. /dist/) va al dashboard
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory('/admin/'),
   routes
 })
 

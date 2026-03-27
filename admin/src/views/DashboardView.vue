@@ -50,6 +50,13 @@
             <div class="kpi-label">Calificados</div>
           </div>
         </div>
+        <div class="kpi-card kpi-usdt">
+          <span class="kpi-icon">💛</span>
+          <div>
+            <div class="kpi-value">{{ usdtCount }}</div>
+            <div class="kpi-label">USDT</div>
+          </div>
+        </div>
       </section>
 
       <!-- TABS NAV -->
@@ -74,10 +81,15 @@
           :class="{ 'tab-active': activeTab === 'leads-comercios' }"
           @click="activeTab = 'leads-comercios'"
         >📌 Leads Comercios</button>
+        <button
+          class="tab-btn"
+          :class="{ 'tab-active': activeTab === 'enc-usdt' }"
+          @click="activeTab = 'enc-usdt'"
+        >💛 Encuesta USDT</button>
       </div>
 
       <!-- FILTERS -->
-      <section v-if="activeTab === 'enc-afiliados' || activeTab === 'enc-comercios'" class="filters-bar">
+      <section v-if="activeTab === 'enc-afiliados' || activeTab === 'enc-comercios' || activeTab === 'enc-usdt'" class="filters-bar">
         <input
           v-model="searchQuery"
           class="filter-input filter-search"
@@ -107,12 +119,12 @@
       </section>
 
       <!-- ERROR STATE -->
-      <div v-if="(activeTab === 'enc-afiliados' || activeTab === 'enc-comercios') && fetchError" class="error-banner">
+      <div v-if="(activeTab === 'enc-afiliados' || activeTab === 'enc-comercios' || activeTab === 'enc-usdt') && fetchError" class="error-banner">
         ⚠️ {{ fetchError }}
       </div>
 
       <!-- TABLE -->
-      <section v-if="activeTab === 'enc-afiliados' || activeTab === 'enc-comercios'" class="table-wrap">
+      <section v-if="activeTab === 'enc-afiliados' || activeTab === 'enc-comercios' || activeTab === 'enc-usdt'" class="table-wrap">
         <div v-if="loading && !submissions.length" class="loading-state">
           <span class="big-spinner"></span>
           <p>Cargando envíos…</p>
@@ -170,7 +182,33 @@
         </table>
 
         <div v-if="filteredRows.length" class="table-footer">
-          Mostrando {{ filteredRows.length }} de {{ activeTab === 'enc-afiliados' ? afiliadoCount : comercioCount }} registros
+          Mostrando {{ filteredRows.length }} de {{ activeTab === 'enc-afiliados' ? afiliadoCount : activeTab === 'enc-usdt' ? usdtCount : comercioCount }} registros
+        </div>
+      </section>
+
+      <!-- USDT STATS -->
+      <section
+        v-if="activeTab === 'enc-usdt' && usdtStats.some(q => q.total > 0)"
+        class="stats-section"
+      >
+        <div class="stats-header">
+          <h3 class="stats-title">💛 Distribución de respuestas — Encuesta USDT</h3>
+          <p class="stats-sub">Medición por opción seleccionada. Detecta atracción, fricción, confianza e intención de adopción.</p>
+        </div>
+        <div class="stats-list">
+          <div v-for="q in usdtStats" :key="q.key" class="stat-row">
+            <div class="stat-content" style="flex:1; width:100%;">
+              <div class="stat-label" style="margin-bottom:14px;">{{ q.label }}</div>
+              <div v-for="opt in q.options" :key="opt.label" class="usdt-opt-row">
+                <div class="usdt-opt-label">{{ opt.label }}</div>
+                <div class="stat-bar-bg" style="flex:1; margin:0 12px;">
+                  <div class="stat-bar-fill usdt-bar-fill" :style="{ width: opt.pct + '%' }"></div>
+                </div>
+                <div class="usdt-opt-count">{{ opt.count }} <span class="score-max">({{ opt.pct }}%)</span></div>
+              </div>
+              <div style="margin-top:8px; font-size:0.74rem; color:var(--muted);">{{ q.total }} respuesta{{ q.total !== 1 ? 's' : '' }}</div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -424,9 +462,59 @@ const afiliadoCount   = computed(() => submissions.value.filter(s => s.landingId
 const comercioCount   = computed(() => submissions.value.filter(s => s.landingId === 'comercio').length)
 const newsletterCount = computed(() => submissions.value.filter(s => s.landingId === 'newsletter').length)
 const qualifiedCount  = computed(() => submissions.value.filter(s => s.isQualified).length)
+const usdtCount       = computed(() => submissions.value.filter(s => s.landingId === 'usdt').length)
 
 const leadsAfiliados = computed(() => leads.value.filter(l => l.landingId === 'afiliado'))
 const leadsComercio  = computed(() => leads.value.filter(l => l.landingId === 'comercio'))
+
+// USDT question/option definitions
+const USDT_QUESTIONS = {
+  q1: {
+    label: 'Atractivo del modelo (USDT + Tarjeta)',
+    options: ['🔥 Muy atractivo', '👍 Interesante', '🤔 Me da igual', '❌ No me interesa']
+  },
+  q2: {
+    label: 'Comodidad con USDT — fricción real',
+    options: ['✅ Sí, totalmente', '⚠️ Sí, con dudas', '❌ No confío en eso', '🤷 No entiendo USDT']
+  },
+  q3: {
+    label: 'Preferencia de uso de ganancias',
+    options: ['💸 Usarlas con tarjeta', '🏦 Retirarlas al banco', '📈 Inversión (cripto)', '🔄 Convertir a efectivo']
+  },
+  q4: {
+    label: 'Factor de confianza — qué reforzar',
+    options: ['🔐 Fácil y automático', '🏢 Empresa confiable', '📊 Ver mis ganancias', '👥 Prueba social']
+  },
+  q5: {
+    label: 'Intención de uso — adopción real',
+    options: ['🚀 Sí, de una', '👍 Probablemente sí', '🤔 No estoy seguro', '❌ No lo usaría']
+  }
+}
+
+const usdtStats = computed(() => {
+  const rows = submissions.value.filter(r => r.landingId === 'usdt' && r.answers)
+  return Object.entries(USDT_QUESTIONS).map(([qKey, qDef]) => {
+    const counts = [0, 0, 0, 0]
+    let total = 0
+    for (const row of rows) {
+      const val = row.answers?.[qKey]
+      if (val !== undefined && val >= 0 && val <= 3) {
+        counts[val]++
+        total++
+      }
+    }
+    return {
+      key: qKey,
+      label: qDef.label,
+      total,
+      options: qDef.options.map((label, i) => ({
+        label,
+        count: counts[i],
+        pct: total > 0 ? Math.round(counts[i] / total * 100) : 0
+      }))
+    }
+  })
+})
 
 // Question labels for analytics
 const QUESTION_LABELS = {
@@ -490,6 +578,7 @@ const filteredRows = computed(() => {
   const days = Number(filterDays.value)
   const tabLanding = activeTab.value === 'enc-afiliados' ? 'afiliado'
                    : activeTab.value === 'enc-comercios'  ? 'comercio'
+                   : activeTab.value === 'enc-usdt'        ? 'usdt'
                    : null
 
   return submissions.value.filter(row => {
@@ -586,6 +675,7 @@ function formatDate(ts) {
 }
 
 function contactInfo(row) {
+  if (row.landingId === 'usdt') return 'Anónimo'
   if (row.nombre && row.telefono) return `${row.nombre} · ${row.telefono}`
   if (row.nombre)   return row.nombre
   if (row.email)    return row.email
@@ -593,7 +683,7 @@ function contactInfo(row) {
 }
 
 function landingLabel(id) {
-  return { afiliado: 'Afiliado', comercio: 'Comercio', newsletter: 'Newsletter' }[id] ?? id
+  return { afiliado: 'Afiliado', comercio: 'Comercio', newsletter: 'Newsletter', usdt: 'USDT' }[id] ?? id
 }
 
 function statusLabel(s) {
@@ -611,6 +701,7 @@ function scorePillClass(row) {
     if (row.score >= 7)  return 'score-mid'
     return 'score-low'
   }
+  if (row.landingId === 'usdt') return ''
   return ''
 }
 
@@ -625,6 +716,7 @@ function scoreTag(row) {
     if (row.score >= 7)  return 'Educable 🟡'
     return 'Descartable 🔴'
   }
+  if (row.landingId === 'usdt') return 'Anónimo 💛'
   return ''
 }
 
@@ -757,6 +849,41 @@ onMounted(() => {
 .kpi-comercio   .kpi-value { color: #a78bfa; }
 .kpi-newsletter .kpi-value { color: #38bdf8; }
 .kpi-qualified  .kpi-value { color: var(--green); }
+.kpi-usdt       .kpi-value { color: #fbbf24; }
+
+/* USDT option breakdown rows */
+.usdt-opt-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.usdt-opt-label {
+  width: 220px;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.3;
+}
+
+.usdt-opt-count {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 60px;
+  text-align: right;
+}
+
+.usdt-bar-fill {
+  background: linear-gradient(90deg, #0d9488, #26c6a0);
+  min-width: 2px;
+}
+
+@media (max-width: 600px) {
+  .usdt-opt-label { width: 130px; font-size: 0.75rem; }
+}
 
 /* Filters */
 .filters-bar {

@@ -14,13 +14,26 @@
       "firestore.indexes.json",
       "**/.*",
       "**/node_modules/**",
+      "admin/index.html",
       "admin/src/**",
       "admin/node_modules/**",
       "dist/**"
     ],
+    "redirects": [
+      {
+        "source": "/admin/dist",
+        "destination": "/admin/",
+        "type": 302
+      },
+      {
+        "source": "/admin/dist/",
+        "destination": "/admin/",
+        "type": 302
+      }
+    ],
     "rewrites": [
       {
-        "source": "/admin/dist/**",
+        "source": "/admin/**",
         "destination": "/admin/dist/index.html"
       },
       {
